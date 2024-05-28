@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() {
   runApp(QuizApp());
@@ -114,13 +113,13 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   int _currentQuestionIndex = 0;
   bool _quizCompleted = false;
-  List<String> _feedback = [];
   bool _questionAnswered = false;
+  List<Map<String, dynamic>> _feedback = [];
   List<Map<String, dynamic>> _questions = [
     {
       'questionText': 'By combining widgets in a visual editor',
       'answers': ['True', 'False'],
-      'correctAnswer': false,
+      'correctAnswer': 'False',
     },
     {
       'questionText':
@@ -143,10 +142,17 @@ class _QuizScreenState extends State<QuizScreen> {
       }
       if (selectedAnswer ==
           _questions[_currentQuestionIndex]['correctAnswer']) {
-        _feedback.add('Correct!');
+        _feedback.add({
+          'questionText': _questions[_currentQuestionIndex]['questionText'],
+          'correctAnswer': 'Correct!',
+          'selectedAnswer': selectedAnswer,
+        });
       } else {
-        _feedback.add(
-            'Incorrect! Correct answer: ${_questions[_currentQuestionIndex]['correctAnswer']}');
+        _feedback.add({
+          'questionText': _questions[_currentQuestionIndex]['questionText'],
+          'correctAnswer': _questions[_currentQuestionIndex]['correctAnswer'],
+          'selectedAnswer': selectedAnswer,
+        });
       }
       _questionAnswered = true;
     });
@@ -156,17 +162,10 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() {
       if (_currentQuestionIndex < _questions.length - 1) {
         _currentQuestionIndex++;
-        _feedback.clear();
         _questionAnswered = false;
       } else {
         _quizCompleted = true;
       }
-    });
-  }
-
-  void _submitQuiz() {
-    setState(() {
-      _quizCompleted = true;
     });
   }
 
@@ -225,24 +224,51 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildQuizResult() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          'Quiz Completed!',
-          style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 20.0),
-        Text(
-          'Your Score: ${_feedback.where((fb) => fb == 'Correct!').length} / ${_questions.length}',
-          style: TextStyle(fontSize: 20.0),
-        ),
-        SizedBox(height: 20.0),
-        TextButton(
-          onPressed: _restartQuiz,
-          child: Text('Restart Quiz'),
-        ),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'Quiz Completed!',
+            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20.0),
+          Text(
+            'Your Score: ${_feedback.where((fb) => fb['correctAnswer'] == 'Correct!').length} / ${_questions.length}',
+            style: TextStyle(fontSize: 20.0),
+          ),
+          SizedBox(height: 20.0),
+          ..._feedback.map(
+            (fb) => Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fb['questionText'],
+                    style:
+                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Your Answer: ${fb['selectedAnswer']}',
+                    style: TextStyle(fontSize: 16.0),
+                  ),
+                  if (fb['correctAnswer'] != 'Correct!')
+                    Text(
+                      'Correct Answer: ${fb['correctAnswer']}',
+                      style: TextStyle(fontSize: 16.0, color: Colors.green),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 20.0),
+          TextButton(
+            onPressed: _restartQuiz,
+            child: Text('Restart Quiz'),
+          ),
+        ],
+      ),
     );
   }
 }
